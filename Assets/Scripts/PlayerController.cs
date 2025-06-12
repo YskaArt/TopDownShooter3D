@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -15,7 +16,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float bulletSpeed = 20f;
+    [SerializeField] private float fireCooldown = 0.5f;
 
+    [Header("Crosshair")]
+    [SerializeField] private Image crosshairImage; // ? Arrastra aqu� la imagen de la mira desde el Canvas
+
+    private float nextFireTime = 0f;
     private float verticalVelocity;
     private Vector2 movementInput;
     private Vector2 mousePosition;
@@ -24,41 +30,43 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
+        Cursor.visible = false; // Opcional: ocultar cursor del sistema
     }
 
     private void Update()
     {
-        
         // Movimiento con gravedad
         if (!characterController.isGrounded)
-        {
             verticalVelocity += gravityForce * Time.deltaTime;
-        }
         else
-        {
             verticalVelocity = 0f;
-        }
 
-        float movementY = (movementInput.y * movementSpeed * Time.deltaTime);
-        float movementX = (movementInput.x * movementSpeed * Time.deltaTime);
-        Vector3 movement = new Vector3(movementX, verticalVelocity, movementY);
+        Vector3 movement = new Vector3(
+            movementInput.x * movementSpeed * Time.deltaTime,
+            verticalVelocity,
+            movementInput.y * movementSpeed * Time.deltaTime
+        );
         characterController.Move(movement);
 
-        
+        // Rotar al objetivo del cursor
         Ray ray = Camera.main.ScreenPointToRay(mousePosition);
         Plane groundPlane = new Plane(Vector3.down, transform.position);
-        Debug.DrawRay(ray.origin, ray.direction * 100f, Color.red);
 
         if (groundPlane.Raycast(ray, out float enter))
         {
             lookTarget = ray.GetPoint(enter);
             Vector3 direction = lookTarget - transform.position;
-
             if (direction.sqrMagnitude > 0.001f)
             {
                 Quaternion lookRotation = Quaternion.LookRotation(direction);
                 transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 0.2f);
             }
+        }
+
+        // Mover la mira a la posici�n del cursor
+        if (crosshairImage != null)
+        {
+            crosshairImage.rectTransform.position = mousePosition;
         }
     }
 
@@ -74,9 +82,10 @@ public class PlayerController : MonoBehaviour
 
     public void OnFire(InputAction.CallbackContext context)
     {
-        if (context.performed)
+        if (context.performed && Time.time >= nextFireTime)
         {
             Shoot();
+            nextFireTime = Time.time + fireCooldown;
         }
     }
 
