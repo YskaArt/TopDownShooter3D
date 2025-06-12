@@ -17,6 +17,8 @@ public class EnemySpawner : MonoBehaviour
 
     public bool TrySpawnEnemy(out GameObject enemyInstance)
     {
+
+
         for (int i = 0; i < 20; i++) // Máximo 20 intentos
         {
             Vector3 randomPos = transform.position + new Vector3(
@@ -36,17 +38,19 @@ public class EnemySpawner : MonoBehaviour
         return false;
     }
 
-    private bool IsVisibleToCamera(Vector3 worldPos)
+    public bool IsVisibleToCamera(Vector3 worldPos)
     {
+        if (mainCamera == null)
+            mainCamera = Camera.main;
         Vector3 screenPoint = mainCamera.WorldToViewportPoint(worldPos);
         return screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
     }
 
-#if UNITY_EDITOR
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, spawnAreaSize);
     }
-#endif
+
 }

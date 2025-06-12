@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -19,7 +19,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float fireCooldown = 0.5f;
 
     [Header("Crosshair")]
-    [SerializeField] private Image crosshairImage; // ? Arrastra aqu� la imagen de la mira desde el Canvas
+    [SerializeField] private Image crosshairImage;
+
+    [Header("Tank Components")]
+    [SerializeField] private Transform turretTransform; 
 
     private float nextFireTime = 0f;
     private float verticalVelocity;
@@ -30,10 +33,17 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
-        Cursor.visible = false; // Opcional: ocultar cursor del sistema
+        Cursor.visible = false;
     }
 
     private void Update()
+    {
+        HandleMovement();
+        HandleTurretRotation();
+        UpdateCrosshairPosition();
+    }
+
+    private void HandleMovement()
     {
         // Movimiento con gravedad
         if (!characterController.isGrounded)
@@ -41,29 +51,42 @@ public class PlayerController : MonoBehaviour
         else
             verticalVelocity = 0f;
 
-        Vector3 movement = new Vector3(
-            movementInput.x * movementSpeed * Time.deltaTime,
-            verticalVelocity,
-            movementInput.y * movementSpeed * Time.deltaTime
-        );
-        characterController.Move(movement);
+        Vector3 move = new Vector3(movementInput.x, 0f, movementInput.y);
 
-        // Rotar al objetivo del cursor
+        // Si hay movimiento, rotamos el cuerpo hacia esa dirección
+        if (move.sqrMagnitude > 0.01f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(move);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.1f); // rotación suave
+        }
+
+        move *= movementSpeed * Time.deltaTime;
+        move.y = verticalVelocity;
+
+        characterController.Move(move);
+    }
+
+    private void HandleTurretRotation()
+    {
         Ray ray = Camera.main.ScreenPointToRay(mousePosition);
         Plane groundPlane = new Plane(Vector3.down, transform.position);
 
         if (groundPlane.Raycast(ray, out float enter))
         {
             lookTarget = ray.GetPoint(enter);
-            Vector3 direction = lookTarget - transform.position;
-            if (direction.sqrMagnitude > 0.001f)
+            Vector3 dirToTarget = lookTarget - turretTransform.position;
+            dirToTarget.y = 0f;
+
+            if (dirToTarget.sqrMagnitude > 0.001f)
             {
-                Quaternion lookRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 0.2f);
+                Quaternion targetRotation = Quaternion.LookRotation(dirToTarget);
+                turretTransform.rotation = Quaternion.Slerp(turretTransform.rotation, targetRotation, 0.2f);
             }
         }
+    }
 
-        // Mover la mira a la posici�n del cursor
+    private void UpdateCrosshairPosition()
+    {
         if (crosshairImage != null)
         {
             crosshairImage.rectTransform.position = mousePosition;

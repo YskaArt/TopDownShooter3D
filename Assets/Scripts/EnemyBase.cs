@@ -4,6 +4,7 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public abstract class EnemyBase : MonoBehaviour
 {
+    
     [SerializeField] private float health = 100f;
     protected NavMeshAgent agent;
     protected Transform player;
@@ -19,6 +20,7 @@ public abstract class EnemyBase : MonoBehaviour
         health -= damage;
         if (health <= 0f)
         {
+            
             Die();
         }
     }
