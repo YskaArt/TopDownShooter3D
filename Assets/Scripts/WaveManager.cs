@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public class WaveManager : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class WaveManager : MonoBehaviour
         public int enemyCount;
         public float duration;
     }
+    public static event Action OnAllWavesCleared;
 
     [Header("Wave Settings")]
     [SerializeField] private List<Wave> waves;
@@ -27,11 +29,9 @@ public class WaveManager : MonoBehaviour
     private List<GameObject> activeEnemies = new List<GameObject>();
     private bool isSpawning = false;
 
-   
     private void Start()
     {
-
-        StartCoroutine(BeginWaveWithInitialDelay());
+        StartCoroutine(BeginWithInitialDelay());
     }
 
     private void Update()
@@ -41,57 +41,41 @@ public class WaveManager : MonoBehaviour
         waveTimer -= Time.deltaTime;
         UpdateHUD();
 
-       
+        // Limpia la lista de enemigos muertos
         activeEnemies.RemoveAll(enemy => enemy == null || !enemy.activeInHierarchy);
 
-        // Condición de fin de ola
-        if ((waveTimer <= 0f || activeEnemies.Count == 0) && currentWaveIndex < waves.Count)
+        // Final de oleada
+        if ((waveTimer <= 0f || activeEnemies.Count == 0) && isSpawning)
         {
             isSpawning = false;
-            StartCoroutine(StartNextWaveWithDelay(3f));
-        }
-
-        // ✅ Victoria al final de la última oleada y sin enemigos
-        if (currentWaveIndex >= waves.Count && activeEnemies.Count == 0)
-        {
-            isSpawning = false;
-            waveText.text = "¡Victoria!";
-            timerText.text = "";
-            enemyCountText.text = "";
-            Debug.Log("Juego terminado con éxito.");
+            StartCoroutine(StartNextWithDelay(3f));
         }
     }
-    private IEnumerator BeginWaveWithInitialDelay()
+    private IEnumerator BeginWithInitialDelay()
     {
         if (currentWaveIndex == 0)
         {
-            yield return new WaitForSeconds(3f); // Tiempo de espera antes de la primera oleada
+            yield return new WaitForSeconds(3f);
             StartCoroutine(ShowCenterMessage("¡Prepárate! La batalla comienza...", 2f));
             yield return new WaitForSeconds(2f);
         }
-
         StartCoroutine(SpawnWave());
     }
-
-
     private IEnumerator SpawnWave()
     {
-        
         if (currentWaveIndex >= waves.Count)
         {
-            Debug.Log("Todas las oleadas completadas. Esperando eliminación de enemigos.");
-            isSpawning = true; // 🔁 Esto permite que el Update siga limpiando la lista
+            HandleVictoria();
             yield break;
         }
 
-        Wave currentWave = waves[currentWaveIndex];
-        waveTimer = currentWave.duration;
+        Wave current = waves[currentWaveIndex];
+        waveTimer = current.duration;
 
-       
-            waveText.text = $"Oleada {currentWaveIndex + 1}";
+        waveText.text = $"Oleada {currentWaveIndex + 1}";
         StartCoroutine(ShowCenterMessage("¡Se avecina una oleada de enemigos!", 2f));
 
-        for (int i = 0; i < currentWave.enemyCount; i++)
+        for (int i = 0; i < current.enemyCount; i++)
         {
             GameObject enemy;
             if (enemySpawner.TrySpawnEnemy(out enemy))
@@ -99,10 +83,16 @@ public class WaveManager : MonoBehaviour
                 activeEnemies.Add(enemy);
             }
         }
-
         isSpawning = true;
         UpdateHUD();
+
         yield return null;
+    }
+    private IEnumerator StartNextWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        currentWaveIndex++;
+        StartCoroutine(SpawnWave());
     }
     private IEnumerator ShowCenterMessage(string message, float duration)
     {
@@ -111,17 +101,22 @@ public class WaveManager : MonoBehaviour
         yield return new WaitForSeconds(duration);
         centerMessageText.enabled = false;
     }
-
-
-    private IEnumerator StartNextWaveWithDelay(float delay)
+    private void HandleVictoria()
     {
-        yield return new WaitForSeconds(delay);
-        currentWaveIndex++;
-        StartCoroutine(SpawnWave());
-    }
+        waveText.text = "¡Victoria!";
+        timerText.text = "";
+        enemyCountText.text = "";
 
+        OnAllWavesCleared?.Invoke();
+
+        Debug.Log("Juego terminado con éxito.");
+
+        
+    }
     private void UpdateHUD()
     {
+        if (activeEnemies == null) return;
+
         enemyCountText.text = "Enemigos: " + activeEnemies.Count;
 
         if (currentWaveIndex >= waves.Count - 1)
@@ -130,7 +125,7 @@ public class WaveManager : MonoBehaviour
         }
         else
         {
-            timerText.text = "Siguiente Oleada En: " + Mathf.CeilToInt(waveTimer) + "s";
+            timerText.text = "Siguiente Oleada en: " + Mathf.CeilToInt(waveTimer) + "s";
         }
     }
 }

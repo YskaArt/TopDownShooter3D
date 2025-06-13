@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 2751171625326942318}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.40799993, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -145,7 +145,7 @@ Transform:
   m_GameObject: {fileID: 2963749978374381791}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.0058526993, y: 0.962, z: 0.00999999}
+  m_LocalPosition: {x: -0.0058526993, y: 0.554, z: 0.00999999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -166,7 +166,7 @@ GameObject:
   - component: {fileID: 6222330155439858547}
   - component: {fileID: 237376653505365747}
   m_Layer: 0
-  m_Name: Enemy 1
+  m_Name: EnemyShooter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -234,8 +234,8 @@ NavMeshAgent:
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
-  m_Height: 2
-  m_BaseOffset: 0
+  m_Height: 2.06
+  m_BaseOffset: 0.12
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
 --- !u!114 &6222330155439858547
@@ -250,6 +250,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdd8a5398d6c85749a4bae03c14bba40, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  explosionParticle: {fileID: 3031431569802051966, guid: 61d55f63810b2b246988f9853a863df3, type: 3}
+  brokenPrefab: {fileID: 1968963477725154361, guid: a1b842f747378a44a9d9ab2d12522168, type: 3}
   health: 100
   shootingRange: 15
   fireCooldown: 1.5
@@ -276,7 +278,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1.97, y: 1.87, z: 2.68}
-  m_Center: {x: 0, y: 0.99, z: 0}
+  m_Center: {x: 0, y: 0.63, z: 0}
 --- !u!1 &6971321942871907673
 GameObject:
   m_ObjectHideFlags: 0

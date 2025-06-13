@@ -10,12 +10,29 @@ public class EnemyShooter : EnemyBase
 
     [Header("Tank Components")]
     [SerializeField] private Transform turretTransform; 
-
+   
     private EnemyState currentState = EnemyState.Pursue;
     private float nextFireTime = 0f;
 
     private void Update()
     {
+  
+            if (player == null)
+            {
+                player = GameObject.FindGameObjectWithTag("Player").transform;
+
+                if (player == null)
+                {
+                    
+                    return;
+                }
+            }
+
+            
+            Vector3 direction = player.transform.position - transform.position;
+           
+        
+
         float distance = Vector3.Distance(transform.position, player.position);
 
         // Cambio de estado según rango

@@ -6,7 +6,7 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private LayerMask obstructionMask;
     [SerializeField] private float checkRadius = 1.5f;
     [SerializeField] private float spawnAreaSize = 20f;
-    [SerializeField] private GameObject enemyPrefab;
+    [SerializeField] private List<GameObject> enemiesPrefabs; 
 
     private Camera mainCamera;
 
@@ -17,9 +17,14 @@ public class EnemySpawner : MonoBehaviour
 
     public bool TrySpawnEnemy(out GameObject enemyInstance)
     {
+        if (enemiesPrefabs == null || enemiesPrefabs.Count == 0)
+        {
+            
+            enemyInstance = null;
+            return false;
+        }
 
-
-        for (int i = 0; i < 20; i++) // Máximo 20 intentos
+        for (int i = 0; i < 20; i++) 
         {
             Vector3 randomPos = transform.position + new Vector3(
                 Random.Range(-spawnAreaSize, spawnAreaSize),
@@ -29,7 +34,13 @@ public class EnemySpawner : MonoBehaviour
 
             if (!IsVisibleToCamera(randomPos) && !Physics.CheckSphere(randomPos, checkRadius, obstructionMask))
             {
-                enemyInstance = Instantiate(enemyPrefab, randomPos, Quaternion.identity);
+                // Elegir un prefab al azar de la lista
+                int idx = Random.Range(0, enemiesPrefabs.Count);
+
+                GameObject chosen = enemiesPrefabs[idx];
+
+                enemyInstance = Instantiate(chosen, randomPos, Quaternion.identity);
+
                 return true;
             }
         }
@@ -38,10 +49,21 @@ public class EnemySpawner : MonoBehaviour
         return false;
     }
 
+
+    public void SpawnRandomEnemies(int amount)
+    {
+        for (int i = 0; i < amount; i++)
+        {
+            TrySpawnEnemy(out _);
+        }
+    }
+
+
     public bool IsVisibleToCamera(Vector3 worldPos)
     {
         if (mainCamera == null)
             mainCamera = Camera.main;
+
         Vector3 screenPoint = mainCamera.WorldToViewportPoint(worldPos);
         return screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
     }
@@ -52,5 +74,4 @@ public class EnemySpawner : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, spawnAreaSize);
     }
-
 }
